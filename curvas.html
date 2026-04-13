@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Curvas de Aquecimento — Modelo de Duas Fases</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌡️</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{--bg:#070b14;--card:#0e1525;--card2:#080d18;--border:#1c2640;--text:#a8b5c8;--text2:#506380;--bright:#e2e8f0;--white:#f1f5f9;--accent:#2a9d8f;--abg:#0d2a28;--al:#7dcfbf}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.7;padding:20px}
+  .wrap{max-width:1000px;margin:0 auto}
+  h1{font-size:20px;font-weight:700;color:var(--white);margin-bottom:2px;letter-spacing:-.02em}
+  h3{font-size:14px;font-weight:700;color:#c8d0dd;margin:16px 0 10px}
+  .sub{font-size:11.5px;color:var(--text2);margin-bottom:4px}
+  .sub2{font-size:10.5px;color:#3d4d63;margin-bottom:18px}
+  .card{background:var(--card);border-radius:14px;padding:18px 16px;border:1px solid var(--border);margin-bottom:18px}
+  .mono{font-family:'JetBrains Mono',monospace;font-size:11.5px;line-height:2;color:#8899b0;background:var(--card2);border-radius:8px;padding:12px 16px;overflow-x:auto;margin-bottom:4px}
+  .hl{background:#0d1a2a;border-left:4px solid var(--accent);border-radius:0 8px 8px 0;padding:12px 16px;margin:16px 0;font-size:12px;line-height:1.8;color:var(--al)}
+  .p{font-size:13px;line-height:1.85;color:var(--text);margin-bottom:12px}
+  .b{color:var(--bright);font-weight:700}
+  table{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
+  th{padding:8px 10px;text-align:left;color:var(--text2);font-weight:500;font-size:11px;border-bottom:2px solid var(--border)}
+  td{padding:8px 10px;color:#8899b0;border-bottom:1px solid #141c30}
+  .cc{position:relative;width:100%;height:440px;margin:10px 0}
+  /* Toggles */
+  .toggles{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px}
+  .tog{padding:5px 13px;border-radius:20px;border:2px solid;background:transparent;font-size:11.5px;font-weight:600;cursor:pointer;font-family:'DM Sans';transition:all .15s}
+  .tog.on{background:color-mix(in srgb, var(--c) 12%, transparent)}
+  .tog.off{color:#3d4d63 !important}
+  /* Tabs */
+  .tabs{display:flex;gap:4px;margin-bottom:14px}
+  .tab{padding:7px 16px;border-radius:8px;border:none;background:transparent;color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans';transition:all .15s}
+  .tab.ac{background:#1c2e4a;color:var(--bright)}
+  .pane{display:none}.pane.ac{display:block}
+  .bb{margin-bottom:14px;padding:12px 16px;background:var(--card2);border-radius:10px}
+  @media(max-width:640px){.cc{height:320px}h1{font-size:18px}.tab{padding:6px 10px;font-size:11px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Modelo de Duas Fases — Curvas de Aquecimento</h1>
+  <p class="sub">T(t) = 23 × [1 − e<sup>−k·(t − t<sub>melt</sub>)</sup>] &nbsp;|&nbsp; M<sub>gelo</sub> = 53,42g &nbsp;|&nbsp; Derretimento total = 56,2 ml &nbsp;|&nbsp; T<sub>amb</sub> = 23°C</p>
+  <p class="sub2">Garrafas com 56,2 ml: t<sub>melt</sub> calculado pela temperatura em t = 90 min &nbsp;|&nbsp; Demais: UA direto pelo volume</p>
+
+  <div class="toggles" id="toggles"></div>
+  <div class="tabs" id="tabs"></div>
+
+  <!-- Gráfico -->
+  <div class="pane ac" id="pane-chart">
+    <div class="card">
+      <div class="cc"><canvas id="mainChart"></canvas></div>
+      <div id="tmLabels" style="display:flex;flex-wrap:wrap;gap:12px;margin-top:8px;font-size:10px;color:#506380"></div>
+    </div>
+  </div>
+
+  <!-- Cálculos -->
+  <div class="pane" id="pane-math">
+    <div class="card" id="mathContent"></div>
+  </div>
+
+  <!-- Tabela -->
+  <div class="pane" id="pane-table">
+    <div class="card" style="overflow-x:auto">
+      <h3>Temperatura Teórica (°C)</h3>
+      <table id="theoTable"></table>
+      <p style="font-size:10px;color:#3d4d63;margin-top:8px">❄ = Fase 1 (gelo presente)</p>
+    </div>
+  </div>
+
+  <!-- Ranking -->
+  <div class="pane" id="pane-rank">
+    <div class="card" style="background:#0b1320;border:1px solid #1a2e4a">
+      <h3>Ranking de Eficiência Térmica</h3>
+      <table id="rankTable"></table>
+      <div class="hl" id="rankAnalysis" style="margin-top:16px"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════════
+const T_AMB=23,T_0=5,M_ICE=0.05342,FULL=56.2,M_TOT=0.300,LF=334000,CW=4186,TEXP=5400;
+const CK=(M_ICE*LF)/(T_AMB*M_TOT*CW);
+
+const bottles=[
+  {n:"Plástico",   ml:56.2,c:"#94a3b8",dash:true},
+  {n:"LePostiche", ml:56.2,c:"#e63946",dash:false},
+  {n:"Pacco",      ml:56.2,c:"#457b9d",dash:false},
+  {n:"gocase",     ml:54.1,c:"#2a9d8f",dash:false},
+  {n:"Stanley",    ml:35,  c:"#d4a017",dash:false},
+  {n:"tuyo",       ml:51,  c:"#f4845f",dash:false},
+];
+
+const tMin=[0,5,10,15,20,25,30,40,50,60,90];
+const ED={
+  "Plástico":   [5,6,6,6,7,8,9,10,12,15,18],
+  "LePostiche": [5,6,6,7,4,4.5,3,6,1,2,9],
+  "Pacco":      [5,6,6,5,3,4,3,3,2,2,2],
+  "gocase":     [5,2,0,-1,-1,-1,0,-1,-1,-2,-2],
+  "Stanley":    [5,4,4,3,2,2,2,2,0,0,0],
+  "tuyo":       [5,9,8,5,4,4,4,5,2,2,1],
+};
+
+// ═══════════════════════════════════════════════════════
+// PHYSICS
+// ═══════════════════════════════════════════════════════
+function solveTm(T90){
+  if(T90<=0)return 1.5;
+  const rhs=-Math.log(1-T90/T_AMB);
+  if(rhs<=0)return 1.5;
+  return(CK*1.5)/(rhs+CK);
+}
+
+function calcP(b){
+  const am=b.ml>=FULL;
+  let tmh,UA;
+  if(am){
+    tmh=solveTm(ED[b.n][tMin.indexOf(90)]);
+    UA=M_ICE*LF/(tmh*3600*T_AMB);
+  }else{
+    UA=(b.ml/1000)*LF/(TEXP*T_AMB);
+    tmh=M_ICE*LF/(UA*T_AMB)/3600;
+  }
+  const tms=tmh*3600,ks=UA/(M_TOT*CW),kh=ks*3600,tau=1/kh;
+  const dt22=Math.log(23)/kh,tt=tmh+dt22;
+  return{UA,tms,tmh,ks,kh,tau,dt22,tt,am};
+}
+
+const P={};bottles.forEach(b=>{P[b.n]=calcP(b)});
+
+function Tmodel(t,p){
+  if(t<=p.tmh)return T_0*(1-t/p.tmh);
+  return T_AMB*(1-Math.exp(-p.kh*(t-p.tmh)));
+}
+
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+const selected=new Set(bottles.map(b=>b.n));
+let activeTab='chart';
+let chart=null;
+
+// ═══════════════════════════════════════════════════════
+// TOGGLE BUTTONS
+// ═══════════════════════════════════════════════════════
+function renderToggles(){
+  const el=document.getElementById('toggles');
+  el.innerHTML=bottles.map(b=>{
+    const on=selected.has(b.n);
+    return `<button class="tog ${on?'on':'off'}" style="--c:${b.c};border-color:${b.c};color:${on?b.c:'#3d4d63'}" onclick="toggle('${b.n}')">${b.n} (${b.ml} ml)${b.dash?' — controle':''}</button>`;
+  }).join('');
+}
+
+function toggle(n){
+  if(selected.has(n))selected.delete(n);else selected.add(n);
+  renderToggles();
+  renderAll();
+}
+
+// ═══════════════════════════════════════════════════════
+// TAB NAVIGATION
+// ═══════════════════════════════════════════════════════
+const tabDefs=[
+  {id:'chart',label:'Gráfico'},
+  {id:'math',label:'Cálculos'},
+  {id:'table',label:'Tabela'},
+  {id:'rank',label:'Ranking'},
+];
+
+function renderTabs(){
+  const el=document.getElementById('tabs');
+  el.innerHTML=tabDefs.map(t=>
+    `<button class="tab ${activeTab===t.id?'ac':''}" onclick="switchTab('${t.id}')">${t.label}</button>`
+  ).join('');
+  tabDefs.forEach(t=>{
+    document.getElementById('pane-'+t.id).classList.toggle('ac',activeTab===t.id);
+  });
+}
+
+function switchTab(id){
+  activeTab=id;
+  renderTabs();
+  renderAll();
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER ALL
+// ═══════════════════════════════════════════════════════
+function renderAll(){
+  if(activeTab==='chart') renderChart();
+  if(activeTab==='math') renderMath();
+  if(activeTab==='table') renderTable();
+  if(activeTab==='rank') renderRank();
+}
+
+// ═══════════════════════════════════════════════════════
+// CHART
+// ═══════════════════════════════════════════════════════
+function renderChart(){
+  const cv=document.getElementById('mainChart');
+  if(!cv)return;
+  if(chart){chart.destroy();chart=null;}
+
+  const active=bottles.filter(b=>selected.has(b.n));
+  const maxH=Math.min(Math.ceil(Math.max(4,...active.map(b=>P[b.n].tt+2))),48);
+
+  const ds=[];
+  // Theoretical curves
+  active.forEach(b=>{
+    const p=P[b.n],data=[];
+    for(let t=0;t<=maxH;t+=0.12)data.push({x:Math.round(t*100)/100,y:Math.round(Tmodel(t,p)*100)/100});
+    ds.push({label:b.n+' (modelo)',data,borderColor:b.c,borderWidth:2.5,pointRadius:0,tension:.3,fill:false,showLine:true,borderDash:b.dash?[6,3]:undefined});
+  });
+  // Experimental points
+  active.forEach(b=>{
+    const data=tMin.map((m,i)=>({x:m/60,y:ED[b.n][i]}));
+    ds.push({label:b.n+' (exp)',data,borderColor:b.c,borderWidth:0,pointRadius:4,pointBackgroundColor:b.c,pointBorderColor:'#0e1525',pointBorderWidth:2,showLine:false});
+  });
+  // T_amb line
+  ds.push({label:'T_amb=23°C',data:[{x:0,y:23},{x:maxH,y:23}],borderColor:'#475569',borderDash:[8,4],borderWidth:1.5,pointRadius:0,showLine:true,fill:false});
+  // t_melt vertical lines (as datasets)
+  active.forEach(b=>{
+    const p=P[b.n];
+    ds.push({label:'t_melt '+b.n,data:[{x:p.tmh,y:-5},{x:p.tmh,y:25}],borderColor:b.c,borderWidth:1,pointRadius:0,borderDash:[4,6],showLine:true,fill:false});
+  });
+
+  chart=new Chart(cv,{type:'scatter',data:{datasets:ds},options:{
+    responsive:true,maintainAspectRatio:false,
+    scales:{
+      x:{type:'linear',min:0,max:maxH,title:{display:true,text:'Tempo (horas)',color:'#7a8ba0'},ticks:{color:'#7a8ba0'},grid:{color:'#151d30'}},
+      y:{min:-5,max:25,title:{display:true,text:'T (°C)',color:'#7a8ba0'},ticks:{color:'#7a8ba0'},grid:{color:'#151d30'}}
+    },
+    plugins:{
+      legend:{position:'bottom',labels:{color:'#8899b0',font:{size:10},usePointStyle:true,boxWidth:8,padding:8,
+        filter:item=>!item.text.startsWith('t_melt')}},
+      tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.parsed.y.toFixed(1)}°C`,title:i=>`t = ${i[0].parsed.x}h`}}
+    }
+  }});
+
+  // t_melt labels
+  document.getElementById('tmLabels').innerHTML=active.map(b=>
+    `<span><span style="color:${b.c};font-weight:700">┆</span> t<sub>melt</sub> ${b.n} = ${P[b.n].tmh.toFixed(1)}h (${(P[b.n].tmh*60).toFixed(0)}min)</span>`
+  ).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+// MATH (step by step)
+// ═══════════════════════════════════════════════════════
+function renderMath(){
+  const el=document.getElementById('mathContent');
+  const active=bottles.filter(b=>selected.has(b.n));
+
+  el.innerHTML=`<h3 style="margin-top:0">Cálculo Passo a Passo</h3>
+    <p style="font-size:11px;color:#506380;margin-bottom:16px">C<sub>k</sub> = M<sub>gelo</sub>·L<sub>f</sub> / (T<sub>amb</sub>·M<sub>total</sub>·c<sub>w</sub>) = ${CK.toFixed(4)}</p>`+
+    active.map(b=>{
+      const p=P[b.n], T90=ED[b.n][tMin.indexOf(90)];
+      let step1;
+      if(p.am){
+        const ratio=(1-T90/T_AMB).toFixed(4);
+        const rhs=(-Math.log(1-T90/T_AMB)).toFixed(4);
+        step1=`<div style="font-size:12px;font-weight:600;color:#8899b0;margin-bottom:6px">① t<sub>melt</sub> via T(90min) = ${T90}°C</div>
+        <div class="mono">
+          <div>Todo gelo derreteu (56,2 ml) → usar temperatura final</div>
+          <div>${T90} = 23 × [1 − e<sup>−(C<sub>k</sub>/t<sub>m</sub>)·(1,5 − t<sub>m</sub>)</sup>]</div>
+          <div>e<sup>−...</sup> = 1 − ${T90}/23 = ${ratio}</div>
+          <div>C<sub>k</sub>·(1,5 − t<sub>m</sub>)/t<sub>m</sub> = −ln(${ratio}) = ${rhs}</div>
+          <div>t<sub>m</sub> = ${CK.toFixed(4)} × 1,5 / (${rhs} + ${CK.toFixed(4)})</div>
+          <div style="color:#e2e8f0;font-weight:700">t<sub>melt</sub> = ${p.tmh.toFixed(4)}h = ${(p.tmh*60).toFixed(1)} min</div>
+        </div>`;
+      }else{
+        step1=`<div style="font-size:12px;font-weight:600;color:#8899b0;margin-bottom:6px">① UA via volume derretido</div>
+        <div class="mono">
+          <div>Gelo ainda presente → derreteu ${b.ml} ml de 56,2 ml</div>
+          <div>UA = (${b.ml}/1000) × 334.000 / (5400 × 23)</div>
+          <div style="color:#e2e8f0;font-weight:700">UA = ${p.UA.toFixed(4)} W/K</div>
+          <div style="margin-top:6px">t<sub>melt</sub> = 0,05342 × 334.000 / (${p.UA.toFixed(4)} × 23) / 3600</div>
+          <div style="color:#e2e8f0;font-weight:700">t<sub>melt</sub> = ${p.tmh.toFixed(2)}h (${(p.tmh*60).toFixed(0)} min)</div>
+        </div>`;
+      }
+
+      return `<div style="margin-bottom:22px;padding-bottom:18px;border-bottom:1px solid #1c2640">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <span style="width:12px;height:12px;border-radius:50%;background:${b.c};display:inline-block"></span>
+          <span style="font-size:14px;font-weight:700;color:${b.c}">${b.n}</span>
+          <span style="font-size:11px;color:#506380">(${b.ml} ml — ${p.am?'todo gelo derreteu':'gelo ainda presente'})</span>
+        </div>
+        ${step1}
+        <div style="font-size:12px;font-weight:600;color:#8899b0;margin:10px 0 6px">② UA e k</div>
+        <div class="mono">
+          <div>UA = 0,05342 × 334.000 / (${p.tms.toFixed(0)} × 23) = <span style="color:#e2e8f0;font-weight:700">${p.UA.toFixed(4)} W/K</span></div>
+          <div>k = UA / (M × c<sub>w</sub>) = ${p.UA.toFixed(4)} / 1255,8</div>
+          <div style="color:#e2e8f0;font-weight:700">k = ${p.kh.toFixed(4)} h⁻¹ &nbsp;|&nbsp; τ = ${p.tau.toFixed(1)}h</div>
+        </div>
+        <div style="font-size:12px;font-weight:600;color:#8899b0;margin:10px 0 6px">③ Equação Final</div>
+        <div class="mono" style="font-size:12px">
+          <div style="color:#506380">Fase 1 (0 ≤ t ≤ ${p.tmh.toFixed(2)}h): T ≈ 0°C</div>
+          <div style="color:#e2e8f0;font-weight:700">Fase 2: T(t) = 23 × [1 − e<sup>−${p.kh.toFixed(4)}·(t − ${p.tmh.toFixed(2)})</sup>]</div>
+          <div style="color:#2a9d8f;margin-top:6px">Tempo total p/ ≈22°C: <strong>${p.tt.toFixed(1)}h</strong> (${(p.tt*60).toFixed(0)} min)</div>
+        </div>
+      </div>`;
+    }).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+// TABLE
+// ═══════════════════════════════════════════════════════
+function renderTable(){
+  const active=bottles.filter(b=>selected.has(b.n));
+  const maxH=Math.min(Math.ceil(Math.max(4,...active.map(b=>P[b.n].tt+2))),48);
+  const times=[0,0.25,0.5,0.75,1,1.5,2,3,4,6,8,10,12,16,20,24,30,36,42].filter(t=>t<=maxH);
+
+  const el=document.getElementById('theoTable');
+  el.innerHTML=`<thead><tr><th>t (h)</th>${active.map(b=>`<th style="color:${b.c}">${b.n}</th>`).join('')}</tr></thead><tbody>`+
+    times.map(t=>`<tr><td style="font-weight:500">${t}</td>${active.map(b=>{
+      const v=Tmodel(t,P[b.n]);
+      const inP1=t<=P[b.n].tmh;
+      return `<td style="text-align:center;color:${inP1?'#506380':v>20?'#2a9d8f':'#8899b0'};font-style:${inP1?'italic':'normal'}">${v.toFixed(1)}${inP1?' ❄':''}</td>`;
+    }).join('')}</tr>`).join('')+`</tbody>`;
+}
+
+// ═══════════════════════════════════════════════════════
+// RANKING
+// ═══════════════════════════════════════════════════════
+function renderRank(){
+  const ranked=[...bottles].sort((a,b)=>P[a.n].UA-P[b.n].UA);
+  const el=document.getElementById('rankTable');
+  el.innerHTML=`<thead><tr>${['#','Garrafa','Derretido','UA (W/K)','t<sub>melt</sub>','k (h⁻¹)','τ (h)','p/ 22°C'].map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>`+
+    ranked.map((b,i)=>{const p=P[b.n];
+      return `<tr><td style="font-weight:700;color:${i===0?'#2a9d8f':'#506380'}">${i===0?'🏆':i+1}</td>
+        <td style="color:${b.c};font-weight:700">${b.n}</td>
+        <td>${b.ml} ml</td><td>${p.UA.toFixed(4)}</td>
+        <td>${p.tmh.toFixed(1)}h</td><td>${p.kh.toFixed(4)}</td>
+        <td>${p.tau.toFixed(1)}</td><td style="font-weight:700">${p.tt.toFixed(1)}h</td></tr>`;
+    }).join('')+`</tbody>`;
+
+  document.getElementById('rankAnalysis').innerHTML=`
+    💡 <strong>Stanley</strong> (UA = ${P.Stanley.UA.toFixed(4)} W/K) tem o melhor isolamento, mantendo gelo por ${P.Stanley.tmh.toFixed(1)}h.
+    O <strong>Plástico</strong> (UA = ${P["Plástico"].UA.toFixed(4)} W/K) confirma seu papel de controle.
+    Garrafas com 56,2 ml diferenciadas pela temperatura final:
+    Plástico → 18°C (gelo em ~${(P["Plástico"].tmh*60).toFixed(0)} min),
+    LePostiche → 9°C (~${(P.LePostiche.tmh*60).toFixed(0)} min),
+    Pacco → 2°C (~${(P.Pacco.tmh*60).toFixed(0)} min).`;
+}
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+renderToggles();
+renderTabs();
+renderAll();
+</script>
+</body>
+</html>
