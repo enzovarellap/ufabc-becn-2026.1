@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Garrafas Térmicas — Linearização Logarítmica</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧊</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{--bg:#070b14;--card:#0e1525;--card2:#080d18;--border:#1c2640;--text:#a8b5c8;--text2:#506380;--text3:#3d4d63;--bright:#e2e8f0;--white:#f1f5f9;--accent:#2a9d8f;--abg:#0d2a28;--al:#7dcfbf}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.7;padding:0}
+  .wrap{max-width:960px;margin:0 auto;padding:20px}
+  h1{font-size:22px;font-weight:700;color:var(--white);margin-bottom:4px;letter-spacing:-.02em}
+  h2{font-size:18px;font-weight:700;color:var(--bright);margin-bottom:14px}
+  h3{font-size:14px;font-weight:700;color:#c8d0dd;margin:18px 0 10px}
+  .sub{font-size:11.5px;color:var(--text2);margin-bottom:20px}
+  .card{background:var(--card);border-radius:14px;padding:20px;border:1px solid var(--border);margin-bottom:18px}
+  .box{background:#0c1422;border-radius:10px;padding:14px 16px;margin:14px 0;border:1px solid var(--border)}
+  .bt{font-size:13px;font-weight:700;color:#c8d0dd;margin-bottom:10px}
+  .math{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--bright);background:var(--card2);border-radius:8px;padding:10px 16px;margin:10px 0;text-align:center}
+  .mono{font-family:'JetBrains Mono',monospace;font-size:11.5px;line-height:1.9;color:#8899b0;background:var(--card2);border-radius:8px;padding:12px 16px;overflow-x:auto}
+  .hl{background:#0d1a2a;border-left:4px solid var(--accent);border-radius:0 8px 8px 0;padding:12px 16px;margin:16px 0;font-size:12.5px;line-height:1.8;color:var(--al)}
+  .p{font-size:13px;line-height:1.85;color:var(--text);margin-bottom:12px}
+  .b{color:var(--bright);font-weight:700}
+  .rw{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid #141c30}
+  .rl{color:#7a8ba0}.rv{color:var(--bright);font-weight:600;font-family:'JetBrains Mono',monospace}
+  table{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
+  th{padding:8px 10px;text-align:left;color:var(--text2);font-weight:500;font-size:11px;border-bottom:2px solid var(--border)}
+  td{padding:8px 10px;color:#8899b0;border-bottom:1px solid #141c30}
+  .bb{margin-bottom:14px;padding:12px 16px;background:var(--card2);border-radius:10px}
+  .cc{position:relative;width:100%;height:420px;margin:10px 0}
+  @media(max-width:640px){.cc{height:300px}h1{font-size:18px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🧊 Garrafas Térmicas — Linearização Logarítmica</h1>
+  <p class="sub">Linearização por Ln &nbsp;|&nbsp; M<sub>gelo</sub> = 53,42g &nbsp;|&nbsp; T<sub>amb</sub> = 23°C</p>
+
+  <!-- ═══ LN LINEARIZATION ═══ -->
+  <div class="card" style="margin-top:18px">
+    <h2>📉 Linearização Logarítmica</h2>
+    <div class="box">
+      <div class="bt">Fundamentação</div>
+      <p class="p">A Lei de Newton do aquecimento diz:</p>
+      <div class="math">T(t) = T<sub>amb</sub> − (T<sub>amb</sub> − T₀) · e<sup>−k·t</sup></div>
+      <p class="p">Rearranjando:</p>
+      <div class="math">T<sub>amb</sub> − T(t) = (T<sub>amb</sub> − T₀) · e<sup>−k·t</sup></div>
+      <p class="p">Aplicando <span class="b">ln</span> em ambos os lados:</p>
+      <div class="math">ln[T<sub>amb</sub> − T(t)] = ln(T<sub>amb</sub> − T₀) − k·t</div>
+      <p class="p">Esta é uma <span class="b">equação linear</span> do tipo <span class="b">Y = b + m·t</span>, onde:</p>
+      <div class="rw"><span class="rl">Y = ln(T<sub>amb</sub> − T)</span><span class="rv">variável dependente</span></div>
+      <div class="rw"><span class="rl">t</span><span class="rv">variável independente</span></div>
+      <div class="rw"><span class="rl">m = −k</span><span class="rv">coeficiente angular (slope)</span></div>
+      <div class="rw"><span class="rl">b = ln(T<sub>amb</sub> − T₀)</span><span class="rv">intercepto</span></div>
+    </div>
+    <p class="p">Se o modelo de Newton se aplica, o gráfico de <span class="b">ln(T<sub>amb</sub> − T) vs. t</span> será uma <span class="b">reta</span>. O coeficiente angular dessa reta é <span class="b">−k</span>.</p>
+    <div class="hl">💡 Pontos onde T ≥ T<sub>amb</sub> ou T<sub>amb</sub> − T ≤ 0 são excluídos (ln indefinido). Isso ocorre naturalmente nas garrafas com gelo (temperaturas negativas → T<sub>amb</sub> − T > 23, válido).</div>
+  </div>
+
+  <div class="card">
+    <h3>Gráfico: ln(T<sub>amb</sub> − T) vs. Tempo</h3>
+    <div class="cc"><canvas id="ch1"></canvas></div>
+  </div>
+
+  <div class="card">
+    <h3>Regressão Linear dos Dados Linearizados</h3>
+    <p class="p">Para cada garrafa, ajustamos Y = b + m·t por regressão linear simples:</p>
+    <div style="overflow-x:auto"><table id="ln-table"></table></div>
+    <div class="hl" style="margin-top:16px">💡 <strong>R² próximo de 1</strong> = modelo de Newton descreve bem os dados. O Plástico tem R² alto porque está claramente na Fase 2 (aquecendo). As garrafas térmicas têm R² mais baixo porque ainda estão na Fase 1 (gelo presente, temperatura ~constante).</div>
+  </div>
+
+  <div class="card">
+    <h3>Cálculo Detalhado — Transformação ln</h3>
+    <div style="overflow-x:auto"><table id="ln-detail"></table></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// CONSTANTS & DATA
+// ═══════════════════════════════════════════════════════
+const T_AMB=23, T_0=5, M_ICE=0.05342, FULL=56.2, M_TOT=0.300, LF=334000, CW=4186, TEXP=5400;
+const CK=(M_ICE*LF)/(T_AMB*M_TOT*CW);
+
+const B=[
+  {n:"Plástico",   ml:56.2, c:"#94a3b8", d:true},
+  {n:"LePostiche", ml:56.2, c:"#e63946", d:false},
+  {n:"Pacco",      ml:56.2, c:"#457b9d", d:false},
+  {n:"gocase",     ml:54.1, c:"#2a9d8f", d:false},
+  {n:"Stanley",    ml:35,   c:"#d4a017", d:false},
+  {n:"tuyo",       ml:51,   c:"#f4845f", d:false},
+];
+
+const tMin=[0,5,10,15,20,25,30,40,50,60,90];
+const ED={
+  "Plástico":   [5,6,6,6,7,8,9,10,12,15,18],
+  "LePostiche": [5,6,6,7,4,4.5,3,6,1,2,9],
+  "Pacco":      [5,6,6,5,3,4,3,3,2,2,2],
+  "gocase":     [5,2,0,-1,-1,-1,0,-1,-1,-2,-2],
+  "Stanley":    [5,4,4,3,2,2,2,2,0,0,0],
+  "tuyo":       [5,9,8,5,4,4,4,5,2,2,1],
+};
+
+// ═══════════════════════════════════════════════════════
+// LN LINEARIZATION
+// ═══════════════════════════════════════════════════════
+function linRegression(xArr, yArr){
+  const n=xArr.length;
+  let sx=0,sy=0,sxy=0,sx2=0,sy2=0;
+  for(let i=0;i<n;i++){sx+=xArr[i];sy+=yArr[i];sxy+=xArr[i]*yArr[i];sx2+=xArr[i]*xArr[i];sy2+=yArr[i]*yArr[i]}
+  const m=(n*sxy-sx*sy)/(n*sx2-sx*sx);
+  const b=(sy-m*sx)/n;
+  const yMean=sy/n;
+  let ssTot=0,ssRes=0;
+  for(let i=0;i<n;i++){ssTot+=(yArr[i]-yMean)**2;ssRes+=(yArr[i]-(b+m*xArr[i]))**2}
+  const r2=ssTot>0?1-ssRes/ssTot:0;
+  return {m,b,r2,n,sx,sy,sxy,sx2,sy2,ssTot,ssRes,yMean};
+}
+
+function getLnData(name){
+  const pts=[];
+  for(let i=0;i<tMin.length;i++){
+    const T=ED[name][i];
+    const diff=T_AMB-T;
+    if(diff>0){
+      pts.push({t:tMin[i], T, diff, lnDiff:Math.log(diff), tH:tMin[i]/60});
+    }
+  }
+  return pts;
+}
+
+const LN={};
+B.forEach(b=>{
+  const pts=getLnData(b.n);
+  const xs=pts.map(p=>p.t);
+  const ys=pts.map(p=>p.lnDiff);
+  const reg=linRegression(xs,ys);
+  const k_mmq=-reg.m;
+  LN[b.n]={pts,reg,k_min:reg.m, k_mmq:-reg.m, b_intercept:reg.b, C_fit:Math.exp(reg.b)};
+});
+
+// ═══════════════════════════════════════════════════════
+// CHART OPTIONS HELPER
+// ═══════════════════════════════════════════════════════
+function chartOpts(xLabel,yLabel,yMin,yMax,xMin,xMax){
+  return {responsive:true,maintainAspectRatio:false,
+    scales:{
+      x:{type:'linear',title:{display:true,text:xLabel,color:'#7a8ba0'},min:xMin,max:xMax,ticks:{color:'#7a8ba0'},grid:{color:'#151d30'}},
+      y:{title:{display:true,text:yLabel,color:'#7a8ba0'},min:yMin,max:yMax,ticks:{color:'#7a8ba0'},grid:{color:'#151d30'}}
+    },
+    plugins:{legend:{position:'bottom',labels:{color:'#8899b0',font:{size:10},usePointStyle:true,boxWidth:8,padding:10}},
+      tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.parsed.y.toFixed(2)}`,title:i=>`t = ${i[0].parsed.x}`}}}
+  };
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER LN CHART
+// ═══════════════════════════════════════════════════════
+function renderLnChart(){
+  const cv=document.getElementById('ch1');if(!cv)return;
+  const ds=[];
+  B.forEach(b=>{
+    const ln=LN[b.n];
+    // Scatter points
+    ds.push({label:b.n+' (dados)',data:ln.pts.map(p=>({x:p.t,y:p.lnDiff})),borderColor:b.c,borderWidth:0,pointRadius:5,pointBackgroundColor:b.c,pointBorderColor:'#0e1525',pointBorderWidth:2,showLine:false});
+    // Regression line
+    const x0=0,x1=90;
+    ds.push({label:b.n+' (reta)',data:[{x:x0,y:ln.reg.b+ln.reg.m*x0},{x:x1,y:ln.reg.b+ln.reg.m*x1}],borderColor:b.c,borderWidth:1.5,pointRadius:0,borderDash:[4,3],showLine:true,fill:false});
+  });
+  new Chart(cv,{type:'scatter',data:{datasets:ds},options:chartOpts('Tempo (min)','ln(T_amb − T)',undefined,undefined,0,90)});
+
+  // Ln regression table
+  const lt=document.getElementById('ln-table');
+  lt.innerHTML=`<thead><tr><th>Garrafa</th><th>m (slope)</th><th>b (intercepto)</th><th>k = −m (min⁻¹)</th><th>k (h⁻¹)</th><th>C = e<sup>b</sup></th><th>R²</th></tr></thead><tbody>`+
+    B.map(b=>{const l=LN[b.n];return `<tr><td style="color:${b.c};font-weight:700">${b.n}</td><td>${l.reg.m.toFixed(6)}</td><td>${l.reg.b.toFixed(4)}</td><td>${l.k_mmq.toFixed(6)}</td><td>${(l.k_mmq*60).toFixed(4)}</td><td>${l.C_fit.toFixed(2)}</td><td style="font-weight:700;color:${l.reg.r2>0.8?'#2a9d8f':l.reg.r2>0.5?'#d4a017':'#e63946'}">${l.reg.r2.toFixed(4)}</td></tr>`}).join('')+
+    `</tbody>`;
+
+  // Detail table
+  const dt=document.getElementById('ln-detail');
+  dt.innerHTML=`<thead><tr><th>t (min)</th>${B.map(b=>`<th style="color:${b.c}">${b.n}<br><span style="font-weight:400;font-size:10px">T → ln(23−T)</span></th>`).join('')}</tr></thead><tbody>`+
+    tMin.map((t,i)=>`<tr><td style="font-weight:500">${t}</td>${B.map(b=>{
+      const T=ED[b.n][i],diff=T_AMB-T;
+      return diff>0?`<td>${T}°C → <span style="color:var(--bright)">${Math.log(diff).toFixed(3)}</span></td>`:`<td style="color:#e63946">—</td>`;
+    }).join('')}</tr>`).join('')+`</tbody>`;
+}
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+setTimeout(renderLnChart, 100);
+</script>
+</body>
+</html>
